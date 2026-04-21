@@ -272,5 +272,13 @@
         atualizarEscala();
         carregarPagina();
     </script>
-</body>
+<// Atualiza os dados da planilha e a escala a cada 5 minutos (300.000 ms)
+setInterval(() => {
+    console.log("Atualizando dados automaticamente...");
+    atualizarEscala();
+    // Limpa os containers antes de recarregar para não duplicar
+    document.getElementById('avisos-wrapper').innerHTML = '';
+    document.getElementById('links-container').innerHTML = '';
+    carregarPagina();
+}, 300000);>
 </html>
