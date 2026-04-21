@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquise aqui! - 1ª Cia Operacional</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #d32f2f;
+            --bg-white: #ffffff;
+            --text-dark: #333333;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --max-page-width: 1400px; 
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-white);
+            margin: 0;
+            padding: 20px 40px;
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Cabeçalho */
+        header {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            width: 100%;
+            max-width: var(--max-page-width);
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .header-logo { grid-column: 1; justify-self: start; }
+        .header-logo img { height: 100px; width: auto; display: block; }
+
+        .header-text { grid-column: 2; text-align: center; }
+        header h1, header .sub-header {
+            font-weight: 700;
+            color: var(--primary-red);
+            text-transform: uppercase;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+        header h1 { font-size: 2rem; }
+        header .sub-header { font-size: 1.8rem; margin-top: 10px; }
+
+        .header-spacer { grid-column: 3; }
+
+        /* Barra de Escala */
+        .info-bar {
+            width: 100%;
+            max-width: var(--max-page-width);
+            text-align: left;
+            font-size: 15pt;
+            margin-bottom: 30px;
+            border-left: 8px solid var(--primary-red);
+            padding-left: 20px;
+            color: #444;
+        }
+
+        /* Botões Base */
+        .btn-base {
+            background-color: #fff;
+            border: 2.5px solid var(--primary-red);
+            border-radius: 12px;
+            text-decoration: none;
+            box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: block;
+            cursor: pointer;
+            color: var(--primary-red);
+        }
+
+        .btn-base:hover {
+            background-color: var(--primary-red);
+            transform: translateY(-6px);
+            box-shadow: 0 12px 24px rgba(211, 47, 47, 0.25);
+            color: #fff !important;
+        }
+
+        /* Avisos */
+        #avisos-wrapper {
+            width: 100%;
+            max-width: var(--max-page-width);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 35px;
+        }
+
+        .btn-aviso { padding: 15px 0; overflow: hidden; }
+
+        .marquee {
+            display: inline-block;
+            white-space: nowrap;
+            padding-left: 100%;
+            /* Ajustado para repetir a mensagem sem duplicar o texto no código */
+            animation: marquee 20s linear infinite;
+            font-weight: 700;
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Grid de Links */
+        .grid-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: var(--max-page-width);
+        }
+
+        .btn-link {
+            padding: 30px 20px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
+        }
+
+        .btn-link:active, .btn-aviso:active { transform: scale(0.95); }
+
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            header { display: flex; flex-direction: column; gap: 20px; }
+            .header-logo img { height: 80px; }
+            .grid-links { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-logo" id="logo-container"></div>
+        <div class="header-text">
+            <h1>Pesquise aqui</h1>
+            <div class="sub-header">1ª Cia Operacional</div>
+        </div>
+        <div class="header-spacer"></div>
+    </header>
+
+    <div class="info-bar" id="data-pelotao">Sincronizando escala...</div>
+    <div id="avisos-wrapper"></div>
+    <div class="grid-links" id="links-container"></div>
+
+    <script>
+        const SHEET_ID = '1qh_Xkuu0RIKmcnBxuXpuBKIOq91sUi_zpHCKsDD2jcA';
+
+        function formatarLinkImagem(url) {
+            if (url.includes('drive.google.com')) {
+                const id = url.split('/d/')[1]?.split('/')[0] || url.split('id=')[1];
+                return `https://lh3.googleusercontent.com/d/${id}`;
+            }
+            return url;
+        }
+
+        function atualizarEscala() {
+            const agora = new Date();
+            const operacional = new Date(agora.getTime());
+            if (agora.getHours() < 8) operacional.setDate(operacional.getDate() - 1);
+            const dataRef = new Date('2026-04-21T08:00:00');
+            const diffDias = Math.floor((operacional - dataRef) / (1000 * 60 * 60 * 24));
+            let pelotao = ((diffDias + 2) % 4); 
+            if (pelotao < 0) pelotao += 4;
+            pelotao += 1;
+            const dataTexto = operacional.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('data-pelotao').innerText = `Data: ${dataTexto}, - ${pelotao}º Pelotão Operacional`;
+        }
+
+        async function fetchSheetData(tabName) {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
+            const response = await fetch(url);
+            const text = await response.text();
+            return text.split('\n').map(row => row.split(',').map(cell => cell.replace(/"/g, '')));
+        }
+
+        async function carregarPagina() {
+            try {
+                const wrapper = document.getElementById('avisos-wrapper');
+                const linksContainer = document.getElementById('links-container');
+                wrapper.innerHTML = '';
+                linksContainer.innerHTML = '';
+
+                const logosData = await fetchSheetData('logos');
+                if (logosData[1] && logosData[1][1]) {
+                    const imgUrl = formatarLinkImagem(logosData[1][1].trim());
+                    document.getElementById('logo-container').innerHTML = `<img src="${imgUrl}" alt="Logo">`;
+                }
+
+                const avisoData = await fetchSheetData('aviso');
+                avisoData.slice(1).forEach(row => {
+                    const msg = row[0];
+                    if (msg && msg.trim() !== "") {
+                        const a = document.createElement('a');
+                        a.href = row[1] || "#";
+                        a.target = "_blank";
+                        a.className = "btn-base btn-aviso";
+                        // CORREÇÃO: Removida a duplicação da variável ${msg}
+                        a.innerHTML = `<div class="marquee">⚠️ AVISO: ${msg}</div>`;
+                        wrapper.appendChild(a);
+                    }
+                });
+
+                const linksData = await fetchSheetData('links');
+                linksData.slice(1).forEach(row => {
+                    if(row[0] && row[1]) {
+                        const a = document.createElement('a');
+                        a.href = row[1];
+                        a.className = "btn-base btn-link";
+                        a.innerText = row[0];
+                        a.target = "_blank";
+                        linksContainer.appendChild(a);
+                    }
+                });
+            } catch (e) { console.error("Falha na atualização:", e); }
+        }
+
+        atualizarEscala();
+        carregarPagina();
+
+        // Bot de atualização automática a cada 5 minutos
+        setInterval(() => {
+            atualizarEscala();
+            carregarPagina();
+        }, 300000);
+    </script>
+</body>
+</html>
